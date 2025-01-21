@@ -18,29 +18,29 @@ export default class NotableGathererPlugin extends Plugin {
         const lines = content.split('\n');
 
         // Find the sections
-        const notablesIndex = lines.findIndex((line: string) => line.trim() === 'Notables:');
         const actionsIndex = lines.findIndex((line: string) => line.trim() === 'Actions:');
+        const notablesIndex = lines.findIndex((line: string) => line.trim() === 'Notables:');
         
         // Collect all lines starting with -> and ->>
-        const notableLines = lines
-            .filter((line: string) => line.trim().startsWith('->') && !line.trim().startsWith('->>'))
-            .filter((line: string, index: number, self: string[]) => self.indexOf(line) === index); // Remove duplicates
-            
         const actionLines = lines
             .filter((line: string) => line.trim().startsWith('->>'))
+            .filter((line: string, index: number, self: string[]) => self.indexOf(line) === index); // Remove duplicates
+
+        const notableLines = lines
+            .filter((line: string) => line.trim().startsWith('->') && !line.trim().startsWith('->>'))
             .filter((line: string, index: number, self: string[]) => self.indexOf(line) === index); // Remove duplicates
 
         let updatedLines = [...lines];
         let offset = 0; // Track position changes as we modify the document
 
-        // Handle Notables section
-        if (notablesIndex === -1) {
-            // Create new Notables section at the top
-            const newNotablesLines = ['Notables:'];
-            if (notableLines.length > 0) {
-                newNotablesLines.push(...notableLines);
+        // Handle Actions section (now first)
+        if (actionsIndex === -1) {
+            // Create new Actions section at the top
+            const newActionsLines = ['Actions:'];
+            if (actionLines.length > 0) {
+                newActionsLines.push(...actionLines);
             }
-            newNotablesLines.push('');
+            newActionsLines.push('');
 
             // Remove any leading blank lines
             while (updatedLines.length > 0 && updatedLines[0].trim() === '') {
@@ -48,64 +48,64 @@ export default class NotableGathererPlugin extends Plugin {
                 offset--;
             }
 
-            // Add Notables section at the top
-            updatedLines.unshift(...newNotablesLines);
-            offset += newNotablesLines.length;
-        } else {
-            // Update existing Notables section
-            let insertIndex = notablesIndex + 1;
-            // Remove existing notables
-            while (insertIndex < updatedLines.length && 
-                   (updatedLines[insertIndex].trim().startsWith('->') || updatedLines[insertIndex].trim() === '')) {
-                updatedLines.splice(insertIndex, 1);
-                offset--;
-            }
-
-            // Insert collected notables
-            if (notableLines.length > 0) {
-                updatedLines.splice(insertIndex, 0, ...notableLines);
-                offset += notableLines.length;
-
-                // Ensure blank line after section
-                if (insertIndex + notableLines.length < updatedLines.length && 
-                    updatedLines[insertIndex + notableLines.length].trim() !== '') {
-                    updatedLines.splice(insertIndex + notableLines.length, 0, '');
-                    offset++;
-                }
-            }
-        }
-
-        // Handle Actions section
-        const adjustedActionsIndex = actionsIndex === -1 ? -1 : actionsIndex + offset;
-        
-        if (adjustedActionsIndex === -1) {
-            // Create new Actions section after Notables
-            const newActionsLines = ['Actions:'];
-            if (actionLines.length > 0) {
-                newActionsLines.push(...actionLines);
-            }
-            newActionsLines.push('');
-
-            // Find where to insert Actions section (after Notables section)
-            const insertIndex = notablesIndex === -1 ? notableLines.length + 2 : 0;
-            updatedLines.splice(insertIndex, 0, ...newActionsLines);
+            // Add Actions section at the top
+            updatedLines.unshift(...newActionsLines);
+            offset += newActionsLines.length;
         } else {
             // Update existing Actions section
-            let insertIndex = adjustedActionsIndex + 1;
+            let insertIndex = actionsIndex + 1;
             // Remove existing actions
             while (insertIndex < updatedLines.length && 
                    (updatedLines[insertIndex].trim().startsWith('->>') || updatedLines[insertIndex].trim() === '')) {
                 updatedLines.splice(insertIndex, 1);
+                offset--;
             }
 
             // Insert collected actions
             if (actionLines.length > 0) {
                 updatedLines.splice(insertIndex, 0, ...actionLines);
+                offset += actionLines.length;
 
                 // Ensure blank line after section
                 if (insertIndex + actionLines.length < updatedLines.length && 
                     updatedLines[insertIndex + actionLines.length].trim() !== '') {
                     updatedLines.splice(insertIndex + actionLines.length, 0, '');
+                    offset++;
+                }
+            }
+        }
+
+        // Handle Notables section (now second)
+        const adjustedNotablesIndex = notablesIndex === -1 ? -1 : notablesIndex + offset;
+        
+        if (adjustedNotablesIndex === -1) {
+            // Create new Notables section after Actions
+            const newNotablesLines = ['Notables:'];
+            if (notableLines.length > 0) {
+                newNotablesLines.push(...notableLines);
+            }
+            newNotablesLines.push('');
+
+            // Find where to insert Notables section (after Actions section)
+            const insertIndex = actionsIndex === -1 ? actionLines.length + 2 : 0;
+            updatedLines.splice(insertIndex, 0, ...newNotablesLines);
+        } else {
+            // Update existing Notables section
+            let insertIndex = adjustedNotablesIndex + 1;
+            // Remove existing notables
+            while (insertIndex < updatedLines.length && 
+                   (updatedLines[insertIndex].trim().startsWith('->') || updatedLines[insertIndex].trim() === '')) {
+                updatedLines.splice(insertIndex, 1);
+            }
+
+            // Insert collected notables
+            if (notableLines.length > 0) {
+                updatedLines.splice(insertIndex, 0, ...notableLines);
+
+                // Ensure blank line after section
+                if (insertIndex + notableLines.length < updatedLines.length && 
+                    updatedLines[insertIndex + notableLines.length].trim() !== '') {
+                    updatedLines.splice(insertIndex + notableLines.length, 0, '');
                 }
             }
         }
@@ -114,7 +114,7 @@ export default class NotableGathererPlugin extends Plugin {
         editor.setValue(updatedLines.join('\n'));
         
         // Show notification
-        const message = `Gathered ${notableLines.length} notables and ${actionLines.length} actions`;
+        const message = `Gathered ${actionLines.length} actions and ${notableLines.length} notables`;
         new Notice(message);
     }
 }
