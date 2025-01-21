@@ -1,34 +1,34 @@
 import { Editor, MarkdownView, Notice, Plugin, MarkdownFileInfo } from 'obsidian';
 
 export default class NotableGathererPlugin extends Plugin {
-    async onload() {
+    async onload(): Promise<void> {
         // Add command to gather notables and actions
         this.addCommand({
             id: 'gather-notables-and-actions',
-            name: 'Notables and Actions',
+            name: 'Gather Notables and Actions',
             editorCallback: (editor: Editor, ctx: MarkdownView | MarkdownFileInfo) => {
                 this.gatherNotablesAndActions(editor);
             }
         });
     }
 
-    gatherNotablesAndActions(editor: Editor) {
+    gatherNotablesAndActions(editor: Editor): void {
         // Get the current content
         const content = editor.getValue();
         const lines = content.split('\n');
 
         // Find the sections
-        const notablesIndex = lines.findIndex(line => line.trim() === 'Notables:');
-        const actionsIndex = lines.findIndex(line => line.trim() === 'Actions:');
+        const notablesIndex = lines.findIndex((line: string) => line.trim() === 'Notables:');
+        const actionsIndex = lines.findIndex((line: string) => line.trim() === 'Actions:');
         
         // Collect all lines starting with -> and ->>
         const notableLines = lines
-            .filter(line => line.trim().startsWith('->') && !line.trim().startsWith('->>'))
-            .filter((line, index, self) => self.indexOf(line) === index); // Remove duplicates
+            .filter((line: string) => line.trim().startsWith('->') && !line.trim().startsWith('->>'))
+            .filter((line: string, index: number, self: string[]) => self.indexOf(line) === index); // Remove duplicates
             
         const actionLines = lines
-            .filter(line => line.trim().startsWith('->>'))
-            .filter((line, index, self) => self.indexOf(line) === index); // Remove duplicates
+            .filter((line: string) => line.trim().startsWith('->>'))
+            .filter((line: string, index: number, self: string[]) => self.indexOf(line) === index); // Remove duplicates
 
         let updatedLines = [...lines];
         let offset = 0; // Track position changes as we modify the document
