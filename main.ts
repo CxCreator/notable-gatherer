@@ -20,6 +20,7 @@ export default class NotableGathererPlugin extends Plugin {
         // Find the sections
         const actionsIndex = lines.findIndex((line: string) => line.trim() === 'Actions:');
         const notablesIndex = lines.findIndex((line: string) => line.trim() === 'Notables:');
+        const notesIndex = lines.findIndex((line: string) => line.trim() === 'Notes:');
         
         // Collect all lines starting with -> and ->>
         const actionLines = lines
@@ -30,88 +31,70 @@ export default class NotableGathererPlugin extends Plugin {
             .filter((line: string) => line.trim().startsWith('->') && !line.trim().startsWith('->>'))
             .filter((line: string, index: number, self: string[]) => self.indexOf(line) === index); // Remove duplicates
 
-        let updatedLines = [...lines];
-        let offset = 0; // Track position changes as we modify the document
+        // Create the new document structure
+        const newDocument: string[] = [];
 
-        // Handle Actions section (now first)
-        if (actionsIndex === -1) {
-            // Create new Actions section at the top
-            const newActionsLines = ['Actions:'];
-            if (actionLines.length > 0) {
-                newActionsLines.push(...actionLines);
-            }
-            newActionsLines.push('');
-
-            // Remove any leading blank lines
-            while (updatedLines.length > 0 && updatedLines[0].trim() === '') {
-                updatedLines.shift();
-                offset--;
-            }
-
-            // Add Actions section at the top
-            updatedLines.unshift(...newActionsLines);
-            offset += newActionsLines.length;
-        } else {
-            // Update existing Actions section
-            let insertIndex = actionsIndex + 1;
-            // Remove existing actions
-            while (insertIndex < updatedLines.length && 
-                   (updatedLines[insertIndex].trim().startsWith('->>') || updatedLines[insertIndex].trim() === '')) {
-                updatedLines.splice(insertIndex, 1);
-                offset--;
-            }
-
-            // Insert collected actions
-            if (actionLines.length > 0) {
-                updatedLines.splice(insertIndex, 0, ...actionLines);
-                offset += actionLines.length;
-
-                // Ensure blank line after section
-                if (insertIndex + actionLines.length < updatedLines.length && 
-                    updatedLines[insertIndex + actionLines.length].trim() !== '') {
-                    updatedLines.splice(insertIndex + actionLines.length, 0, '');
-                    offset++;
-                }
-            }
+        // 1. Add Actions section
+        newDocument.push('Actions:');
+        if (actionLines.length > 0) {
+            newDocument.push(...actionLines);
         }
+        newDocument.push('');
 
-        // Handle Notables section (now second)
-        const adjustedNotablesIndex = notablesIndex === -1 ? -1 : notablesIndex + offset;
+        // 2. Add Notables section
+        newDocument.push('Notables:');
+        if (notableLines.length > 0) {
+            newDocument.push(...notableLines);
+        }
+        newDocument.push('');
+
+        // 3. Add Notes section with remaining content
+        newDocument.push('Notes:');
         
-        if (adjustedNotablesIndex === -1) {
-            // Create new Notables section after Actions
-            const newNotablesLines = ['Notables:'];
-            if (notableLines.length > 0) {
-                newNotablesLines.push(...notableLines);
+        // Filter out the existing sections and their content, keep the rest
+        let remainingContent = lines.slice();
+        
+        // Remove existing Actions section
+        if (actionsIndex !== -1) {
+            let endIndex = actionsIndex + 1;
+            while (endIndex < remainingContent.length && 
+                   (remainingContent[endIndex].trim().startsWith('->>') || remainingContent[endIndex].trim() === '')) {
+                endIndex++;
             }
-            newNotablesLines.push('');
-
-            // Find where to insert Notables section (after Actions section)
-            const insertIndex = actionsIndex === -1 ? actionLines.length + 2 : 0;
-            updatedLines.splice(insertIndex, 0, ...newNotablesLines);
-        } else {
-            // Update existing Notables section
-            let insertIndex = adjustedNotablesIndex + 1;
-            // Remove existing notables
-            while (insertIndex < updatedLines.length && 
-                   (updatedLines[insertIndex].trim().startsWith('->') || updatedLines[insertIndex].trim() === '')) {
-                updatedLines.splice(insertIndex, 1);
-            }
-
-            // Insert collected notables
-            if (notableLines.length > 0) {
-                updatedLines.splice(insertIndex, 0, ...notableLines);
-
-                // Ensure blank line after section
-                if (insertIndex + notableLines.length < updatedLines.length && 
-                    updatedLines[insertIndex + notableLines.length].trim() !== '') {
-                    updatedLines.splice(insertIndex + notableLines.length, 0, '');
-                }
-            }
+            remainingContent.splice(actionsIndex, endIndex - actionsIndex);
         }
+
+        // Remove existing Notables section
+        if (notablesIndex !== -1) {
+            let endIndex = notablesIndex + 1;
+            while (endIndex < remainingContent.length && 
+                   (remainingContent[endIndex].trim().startsWith('->') || remainingContent[endIndex].trim() === '')) {
+                endIndex++;
+            }
+            remainingContent.splice(notablesIndex, endIndex - notablesIndex);
+        }
+
+        // Remove existing Notes section header if it exists
+        if (notesIndex !== -1) {
+            remainingContent.splice(notesIndex, 1);
+        }
+
+        // Remove any leading/trailing blank lines from remaining content
+        while (remainingContent.length > 0 && remainingContent[0].trim() === '') {
+            remainingContent.shift();
+        }
+        while (remainingContent.length > 0 && remainingContent[remainingContent.length - 1].trim() === '') {
+            remainingContent.pop();
+        }
+
+        // Add the remaining content to Notes section if there is any
+        if (remainingContent.length > 0) {
+            newDocument.push(...remainingContent);
+        }
+        newDocument.push('');
 
         // Update the editor content
-        editor.setValue(updatedLines.join('\n'));
+        editor.setValue(newDocument.join('\n'));
         
         // Show notification
         const message = `Gathered ${actionLines.length} actions and ${notableLines.length} notables`;
