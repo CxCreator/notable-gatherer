@@ -1,31 +1,41 @@
 # Notable Gatherer Plugin for Obsidian
 
-This plugin helps you gather and organize notable points in your notes. It looks for lines starting with "->", collects them, and places them under a "Notables:" section at the top of your note.
+This plugin helps you gather and organize notable points and actions in your notes. It looks for lines starting with "->" and "->>" and organizes them into dedicated sections at the top of your note.
+
+## Features
+
+The plugin supports two types of markers:
+- Lines starting with "->" are gathered under the "Notables:" section
+- Lines starting with "->>" are gathered under the "Actions:" section
+
+Both sections will be created automatically if they don't exist, and duplicates are automatically removed within each section.
 
 ## How It Works
 
 1. Any text that starts with "->" anywhere in your note will be considered a notable point
-2. When you run the command, it copies these lines to the "Notables:" section
-3. The original lines stay in place
-4. Duplicate notables are automatically removed
+2. Any text that starts with "->>" anywhere in your note will be considered an action item
+3. When you run the command, it copies these lines to their respective sections
+4. The original lines stay in place
+5. Duplicate items are automatically removed within each section
 
 ## Example
 
 Your note:
 ```
-Notables:
-
 Meeting Notes:
 -> Need to follow up with Sarah
 Today was a productive meeting overall.
+->> Send meeting minutes
 We discussed Q4 plans and budgets.
 -> Schedule next sprint planning
 Had good engagement from the team.
+->> Update sprint board
 
 Random thoughts:
 Feeling tired today, need more sleep.
 -> Need to follow up with Sarah
 The weather is nice outside.
+->> Send meeting minutes
 Office temperature is too cold.
 -> Buy more coffee
 Remember to call mom later.
@@ -38,17 +48,24 @@ Notables:
 -> Schedule next sprint planning
 -> Buy more coffee
 
+Actions:
+->> Send meeting minutes
+->> Update sprint board
+
 Meeting Notes:
 -> Need to follow up with Sarah
 Today was a productive meeting overall.
+->> Send meeting minutes
 We discussed Q4 plans and budgets.
 -> Schedule next sprint planning
 Had good engagement from the team.
+->> Update sprint board
 
 Random thoughts:
 Feeling tired today, need more sleep.
 -> Need to follow up with Sarah
 The weather is nice outside.
+->> Send meeting minutes
 Office temperature is too cold.
 -> Buy more coffee
 Remember to call mom later.
@@ -88,15 +105,12 @@ pnpm run build
 
 ## Usage
 
-1. Make sure your note has a "Notables:" section
+1. Add notable points using "->" and action items using "->>" anywhere in your note
 2. Press `Cmd + P` (Mac) or `Ctrl + P` (Windows) to open command palette
-3. Type "gather" to find the "Gather Notables" command
+3. Type "gather" to find the "Gather Notables and Actions" command
 4. Press Enter to run it
 
-## Requirements
-
-- Note must have a "Notables:" section
-- Notables must start with "->"
+The plugin will automatically create the "Notables:" and "Actions:" sections if they don't exist.
 
 ## Support
 
