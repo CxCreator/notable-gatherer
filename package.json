@@ -1,19 +1,19 @@
 {
   "name": "notable-gatherer",
-  "version": "1.0.1",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w"
   },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^latest",
-    "@rollup/plugin-node-resolve": "^latest",
-    "@rollup/plugin-typescript": "^latest",
-    "rollup": "^latest",
-    "typescript": "^latest"
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-typescript": "^11.1.5",
+    "rollup": "^4.9.5",
+    "typescript": "^5.3.3"
   },
   "dependencies": {
-    "obsidian": "latest"
+    "obsidian": "^1.4.11"
   }
 }
