@@ -1,9 +1,9 @@
 {
   "id": "notable-gatherer",
   "name": "Notable Gatherer",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "minAppVersion": "0.15.0",
-  "description": "Gathers lines starting with -> under Notables and ->> under Actions sections, helping organize your important points and tasks",
+  "description": "Day Debrief",
   "author": "CxCreator",
   "isDesktopOnly": false
 }
