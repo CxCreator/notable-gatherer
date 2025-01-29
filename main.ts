@@ -20,6 +20,8 @@ export default class NotableGathererPlugin extends Plugin {
         // Find the sections
         const actionsIndex = lines.findIndex((line: string) => line.trim() === 'Actions:');
         const notablesIndex = lines.findIndex((line: string) => line.trim() === 'Notables:');
+        const madeTrueIndex = lines.findIndex((line: string) => line.trim() === 'What did I make True Today:');
+        const summaryIndex = lines.findIndex((line: string) => line.trim() === 'Day Summary:');
         const notesIndex = lines.findIndex((line: string) => line.trim() === 'Notes:');
         
         // Collect all lines starting with -> and ->>
@@ -48,7 +50,35 @@ export default class NotableGathererPlugin extends Plugin {
         }
         newDocument.push('');
 
-        // 3. Add Notes section with remaining content
+        // 3. Add What did I make True Today section
+        newDocument.push('What did I make True Today:');
+        // Keep existing accomplishments if they exist
+        if (madeTrueIndex !== -1) {
+            let endIndex = madeTrueIndex + 1;
+            while (endIndex < lines.length && 
+                   !lines[endIndex].trim().startsWith('Day Summary:') &&
+                   lines[endIndex].trim() !== '') {
+                newDocument.push(lines[endIndex]);
+                endIndex++;
+            }
+        }
+        newDocument.push('');
+
+        // 4. Add Day Summary section
+        newDocument.push('Day Summary:');
+        // Keep existing summary if it exists
+        if (summaryIndex !== -1) {
+            let endIndex = summaryIndex + 1;
+            while (endIndex < lines.length && 
+                   !lines[endIndex].trim().startsWith('Notes:') &&
+                   lines[endIndex].trim() !== '') {
+                newDocument.push(lines[endIndex]);
+                endIndex++;
+            }
+        }
+        newDocument.push('');
+
+        // 5. Add Notes section with remaining content
         newDocument.push('Notes:');
         
         // Filter out the existing sections and their content, keep the rest
@@ -72,6 +102,28 @@ export default class NotableGathererPlugin extends Plugin {
                 endIndex++;
             }
             remainingContent.splice(notablesIndex, endIndex - notablesIndex);
+        }
+
+        // Remove existing What did I make True Today section
+        if (madeTrueIndex !== -1) {
+            let endIndex = madeTrueIndex + 1;
+            while (endIndex < remainingContent.length && 
+                   !remainingContent[endIndex].trim().startsWith('Day Summary:') &&
+                   remainingContent[endIndex].trim() !== '') {
+                endIndex++;
+            }
+            remainingContent.splice(madeTrueIndex, endIndex - madeTrueIndex);
+        }
+
+        // Remove existing Day Summary section
+        if (summaryIndex !== -1) {
+            let endIndex = summaryIndex + 1;
+            while (endIndex < remainingContent.length && 
+                   !remainingContent[endIndex].trim().startsWith('Notes:') &&
+                   remainingContent[endIndex].trim() !== '') {
+                endIndex++;
+            }
+            remainingContent.splice(summaryIndex, endIndex - summaryIndex);
         }
 
         // Remove existing Notes section header if it exists
